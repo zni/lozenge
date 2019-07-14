@@ -5,6 +5,7 @@ use std::path::Path;
 use std::process;
 
 use lozenge::scanner::Scanner;
+use lozenge::parser::Parser;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -30,7 +31,10 @@ fn run_file(file: &String) {
 }
 
 fn run(source: Vec<char>) {
-    let mut scanner: Scanner = Scanner::new(source);
+    let mut scanner = Scanner::new(source);
     scanner.scan_tokens();
     println!("{:#?}", scanner.tokens);
+
+    let mut parser = Parser::new(scanner.tokens);
+    println!("{:#?}", parser.parse());
 }

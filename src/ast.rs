@@ -35,12 +35,12 @@ pub enum Type {
     EOF,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Literal {
     Number(i32)
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Token {
     pub r#type: Type,
     pub lexeme: String,
@@ -57,4 +57,13 @@ impl Token {
             r#type, lexeme, literal, line
         }
     }
+}
+
+#[derive(Debug)]
+pub enum Expr {
+    OddExpr(Box<Expr>),
+    PrefixExpr(Option<Type>, Box<Expr>),
+    Expr(Box<Expr>, Type, Box<Expr>),
+    Literal(Literal),
+    Var(String),
 }
