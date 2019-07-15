@@ -267,12 +267,12 @@ impl Parser {
             prefix = None
         }
 
-        let term = self.term();
+        let mut term = self.term();
         while self.match_token(vec![Type::Plus, Type::Minus]) {
             let operator = self.previous();
             let right = self.term();
             if term.is_ok() && right.is_ok() {
-                return Ok(Expr::PrefixExpr(prefix, Box::new(Expr::Expr(Box::new(term.unwrap()), operator.r#type, Box::new(right.unwrap())))))
+                term = Ok(Expr::Expr(Box::new(term.unwrap()), operator.r#type, Box::new(right.unwrap())));
             } else {
                 return term.and(right);
             }
@@ -286,13 +286,13 @@ impl Parser {
     }
 
     fn term(&mut self) -> Result<Expr, &'static str> {
-        let factor = self.factor();
+        let mut factor = self.factor();
         while self.match_token(vec![Type::Star, Type::Slash]) {
             let operator = self.previous();
             let right = self.factor();
 
             if factor.is_ok() && right.is_ok() {
-                return Ok(Expr::Expr(Box::new(factor.unwrap()), operator.r#type, Box::new(right.unwrap())))
+                factor = Ok(Expr::Expr(Box::new(factor.unwrap()), operator.r#type, Box::new(right.unwrap())))
             } else {
                 return factor.and(right);
             }
