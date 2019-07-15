@@ -61,9 +61,26 @@ impl Token {
 
 #[derive(Debug)]
 pub enum Expr {
-    OddExpr(Box<Expr>),
-    PrefixExpr(Option<Type>, Box<Expr>),
     Expr(Box<Expr>, Type, Box<Expr>),
     Literal(Literal),
+    OddExpr(Box<Expr>),
+    PrefixExpr(Option<Type>, Box<Expr>),
+    Program(Box<Expr>),
     Var(String),
+}
+
+#[derive(Debug)]
+pub enum Block {
+    Assign(Expr, Expr),
+    Begin(Vec<Box<Block>>),
+    Block(Vec<Box<Block>>, Box<Block>, Vec<Box<Block>>, Box<Block>),
+    Call(Expr),
+    Const(Expr, Expr),
+    ConstDecs(Vec<Box<Block>>),
+    If(Expr, Box<Block>),
+    Procedure(Expr, Box<Block>),
+    Program(Box<Block>),
+    VarDecs(Vec<Box<Expr>>),
+    While(Expr, Box<Block>),
+    WriteLn(Expr),
 }

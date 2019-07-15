@@ -33,8 +33,12 @@ fn run_file(file: &String) {
 fn run(source: Vec<char>) {
     let mut scanner = Scanner::new(source);
     scanner.scan_tokens();
-    println!("{:#?}", scanner.tokens);
+    //println!("{:#?}", scanner.tokens);
 
     let mut parser = Parser::new(scanner.tokens);
     println!("{:#?}", parser.parse());
+    println!("{:?}", parser.current);
+    println!("{:?}", parser.tokens.len());
+    // println!("{:?}", parser.tokens);
+    println!("stopped on token: {:?}", parser.tokens[parser.current]);
 }

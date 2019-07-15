@@ -1,7 +1,8 @@
-use crate::ast::{Type, Token, Literal, Expr};
+use crate::ast::{Type, Token, Literal, Expr, Block};
 
+#[derive(Debug)]
 pub struct Parser {
-    current: usize,
+    pub current: usize,
     pub tokens: Vec<Token>
 }
 
@@ -11,12 +12,225 @@ impl Parser {
         Parser { current, tokens }
     }
 
-    pub fn parse(&mut self) -> Result<Expr, &'static str> {
-        let expr = self.expression();
-        if !self.is_at_end() {
+    pub fn parse(&mut self) -> Result<Block, &'static str> {
+        let program = self.program();
+        /*
+        if !self.match_token(vec![Type::EOF]) {
             return Err("unexpected end of input");
         }
-        return expr;
+        */
+        return program;
+    }
+
+    fn program(&mut self) -> Result<Block, &'static str> {
+        let block = self.block();
+        if block.is_err() {
+            return block;
+        }
+
+        let dot = self.expect(Type::Dot, "expected dot to end program");
+        if dot.is_err() {
+            return Err(dot.unwrap_err());
+        }
+
+        Ok(Block::Program(Box::new(block.unwrap())))
+    }
+
+    fn block(&mut self) -> Result<Block, &'static str> {
+        let mut const_decs = Vec::new();
+        if self.match_token(vec![Type::Const]) {
+            loop {
+                let ident = self.expect(Type::Identifier, "identifier");
+                if ident.is_err() {
+                    return Err(ident.unwrap_err());
+                }
+                let ident = Expr::Var(ident.unwrap().lexeme);
+
+                if !self.match_token(vec![Type::Equal]) {
+                    return Err("expected '=' in const expression");
+                }
+
+                let number = self.expect(Type::Number, "number");
+                if number.is_err() {
+                    return Err(number.unwrap_err());
+                }
+                let number = Expr::Literal(number.unwrap().literal.unwrap());
+
+                let const_dec = Block::Const(ident, number);
+                const_decs.push(Box::new(const_dec));
+
+                if !self.match_token(vec![Type::Comma]) {
+                    break;
+                }
+            }
+            let semi = self.expect(Type::Semicolon,
+                                   "missing semicolon after const decs");
+            if semi.is_err() {
+                return Err(semi.unwrap_err());
+            }
+        }
+
+        let mut var_decs = Vec::new();
+        if self.match_token(vec![Type::Var]) {
+            loop {
+                let ident = self.expect(Type::Identifier, "identifier");
+                if ident.is_err() {
+                    return Err(ident.unwrap_err());
+                }
+                let ident = Expr::Var(ident.unwrap().lexeme);
+
+                var_decs.push(Box::new(ident));
+
+                if !self.match_token(vec![Type::Comma]) {
+                    break;
+                }
+            }
+            let semi = self.expect(Type::Semicolon,
+                                   "missing semicolon after var decs");
+            if semi.is_err() {
+                return Err(semi.unwrap_err());
+            }
+        }
+        let var_decs = Block::VarDecs(var_decs);
+
+        let mut procedures = Vec::new();
+        while self.match_token(vec![Type::Procedure]) {
+            let ident = self.expect(Type::Identifier, "missing procedure identifier");
+            if ident.is_err() {
+                return Err(ident.unwrap_err());
+            }
+            let ident = Expr::Var(ident.unwrap().lexeme);
+
+            let semi = self.expect(Type::Semicolon,
+                                   "missing semicolon after procedure identifier");
+            if semi.is_err() {
+                return Err(semi.unwrap_err());
+            }
+
+            let block = self.block();
+            if block.is_err() {
+                return Err(block.unwrap_err());
+            }
+
+            let semi = self.expect(Type::Semicolon,
+                                   "missing semicolon after procedure block");
+            if semi.is_err() {
+                return Err(semi.unwrap_err());
+            }
+
+            let procedure = Block::Procedure(ident, Box::new(block.unwrap()));
+            procedures.push(Box::new(procedure));
+        }
+
+        let statement = self.statement();
+        if statement.is_err() {
+            return Err(statement.unwrap_err());
+        }
+
+        return Ok(Block::Block(const_decs,
+                               Box::new(var_decs),
+                               procedures,
+                               Box::new(statement.unwrap())));
+    }
+
+    fn statement(&mut self) -> Result<Block, &'static str> {
+        // Assignment
+        if self.match_token(vec![Type::Identifier]) {
+            let var = self.previous();
+
+            let coloneq = self.expect(Type::ColonEqual, "missing colon equal");
+            if coloneq.is_err() {
+                return Err(coloneq.unwrap_err())
+            }
+
+            let right = self.expression();
+            if right.is_ok() {
+                return Ok(Block::Assign(Expr::Var(var.lexeme), right.unwrap()));
+            } else {
+                return Err(right.unwrap_err());
+            }
+
+        // Call Statement
+        } else if self.match_token(vec![Type::Call]) {
+            let ident = self.expect(Type::Identifier, "call missing identifier");
+            if ident.is_err() {
+                return Err(ident.unwrap_err());
+            }
+
+            let ident = Expr::Var(ident.unwrap().lexeme);
+            return Ok(Block::Call(ident));
+
+        // Begin block
+        } else if self.match_token(vec![Type::Begin]) {
+            let mut statements = Vec::new();
+            loop {
+                let statement = self.statement();
+                if statement.is_err() {
+                    return statement;
+                }
+
+                statements.push(Box::new(statement.unwrap()));
+                if !self.match_token(vec![Type::Semicolon]) {
+                    break;
+                }
+            }
+            let end = self.expect(Type::End, "missing end keyword or semicolon");
+            if end.is_err() {
+                return Err(end.unwrap_err());
+            }
+            return Ok(Block::Begin(statements));
+
+        // If block
+        } else if self.match_token(vec![Type::If]) {
+            let condition = self.condition();
+            if condition.is_err() {
+                return Err(condition.unwrap_err());
+            }
+
+            let then = self.expect(Type::Then, "missing then keyword");
+            if then.is_err() {
+                return Err(then.unwrap_err());
+            }
+
+            let body = self.statement();
+
+            if body.is_ok() {
+                return Ok(Block::If(condition.unwrap(),
+                                    Box::new(body.unwrap())));
+            } else {
+                return condition.and(body);
+            }
+
+        // While block
+        } else if self.match_token(vec![Type::While]) {
+            let condition = self.condition();
+
+            let do_keyword = self.expect(Type::Do, "missing do keyword");
+            if do_keyword.is_err() {
+                return Err(do_keyword.unwrap_err());
+            }
+
+            let body = self.statement();
+
+            if condition.is_ok() && body.is_ok() {
+                return Ok(Block::While(condition.unwrap(),
+                                       Box::new(body.unwrap())));
+            } else {
+                return condition.and(body);
+            }
+
+        // WriteLn
+        } else if self.match_token(vec![Type::Bang]) {
+            let expression = self.expression();
+
+            if expression.is_err() {
+                return Err(expression.unwrap_err());
+            }
+
+            return Ok(Block::WriteLn(expression.unwrap()));
+        }
+
+        return Err("statement error");
     }
 
     fn condition(&mut self) -> Result<Expr, &'static str> {
@@ -67,7 +281,7 @@ impl Parser {
         if term.is_ok() {
             return Ok(Expr::PrefixExpr(prefix, Box::new(term.unwrap())));
         } else {
-            return Err("")
+            return term;
         }
     }
 
@@ -96,7 +310,9 @@ impl Parser {
             return Ok(Expr::Literal(self.previous().literal.unwrap()));
         }
 
-        return Err("expected identifier or number");
+        // TODO Handle parens
+
+        return Err("expected expression");
     }
 
     fn match_token(&mut self, tokens: Vec<Type>) -> bool {
@@ -108,6 +324,17 @@ impl Parser {
         }
 
         return false;
+    }
+
+    fn expect(&mut self,
+              token: Type,
+              err: &'static str) -> Result<Token, &'static str> {
+        if self.check(token) {
+            let token: Token = self.tokens[self.current].clone();
+            self.advance();
+            return Ok(token);
+        }
+        Err(err)
     }
 
     fn check(&mut self, token_type: Type) -> bool {
