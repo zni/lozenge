@@ -13,13 +13,7 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Block, &'static str> {
-        let program = self.program();
-        /*
-        if !self.match_token(vec![Type::EOF]) {
-            return Err("unexpected end of input");
-        }
-        */
-        return program;
+        self.program()
     }
 
     fn program(&mut self) -> Result<Block, &'static str> {
@@ -69,6 +63,7 @@ impl Parser {
                 return Err(semi.unwrap_err());
             }
         }
+        let const_decs = Block::ConstDecs(const_decs);
 
         let mut var_decs = Vec::new();
         if self.match_token(vec![Type::Var]) {
@@ -127,7 +122,7 @@ impl Parser {
             return Err(statement.unwrap_err());
         }
 
-        return Ok(Block::Block(const_decs,
+        return Ok(Block::Block(Box::new(const_decs),
                                Box::new(var_decs),
                                procedures,
                                Box::new(statement.unwrap())));

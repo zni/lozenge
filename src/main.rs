@@ -6,6 +6,7 @@ use std::process;
 
 use lozenge::scanner::Scanner;
 use lozenge::parser::Parser;
+use lozenge::interp::Interp;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -36,9 +37,16 @@ fn run(source: Vec<char>) {
     //println!("{:#?}", scanner.tokens);
 
     let mut parser = Parser::new(scanner.tokens);
-    println!("{:#?}", parser.parse());
-    println!("{:?}", parser.current);
-    println!("{:?}", parser.tokens.len());
-    // println!("{:?}", parser.tokens);
-    println!("stopped on token: {:?}", parser.tokens[parser.current]);
+    let program = parser.parse();
+    if program.is_ok() {
+        let mut interp = Interp::new();
+        interp.eval(program.unwrap());
+        println!("{:?}", interp.env);
+    } else {
+        println!("error: {}", program.unwrap_err());
+    }
+    //println!("{:?}", parser.current);
+    //println!("{:?}", parser.tokens.len());
+    //// println!("{:?}", parser.tokens);
+    //println!("stopped on token: {:?}", parser.tokens[parser.current]);
 }

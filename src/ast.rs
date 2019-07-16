@@ -65,7 +65,6 @@ pub enum Expr {
     Literal(Literal),
     OddExpr(Box<Expr>),
     PrefixExpr(Option<Type>, Box<Expr>),
-    Program(Box<Expr>),
     Var(String),
 }
 
@@ -73,7 +72,7 @@ pub enum Expr {
 pub enum Block {
     Assign(Expr, Expr),
     Begin(Vec<Box<Block>>),
-    Block(Vec<Box<Block>>, Box<Block>, Vec<Box<Block>>, Box<Block>),
+    Block(Box<Block>, Box<Block>, Vec<Box<Block>>, Box<Block>),
     Call(Expr),
     Const(Expr, Expr),
     ConstDecs(Vec<Box<Block>>),
