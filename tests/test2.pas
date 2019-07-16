@@ -4,5 +4,6 @@ begin
     begin
         x := 1
     end;
-    y := 2
+    y := 2;
+    ! y
 end.
