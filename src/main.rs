@@ -34,19 +34,14 @@ fn run_file(file: &String) {
 fn run(source: Vec<char>) {
     let mut scanner = Scanner::new(source);
     scanner.scan_tokens();
-    //println!("{:#?}", scanner.tokens);
 
     let mut parser = Parser::new(scanner.tokens);
-    let program = parser.parse();
-    if program.is_ok() {
-        let mut interp = Interp::new();
-        interp.eval(program.unwrap());
-        println!("{:?}", interp.env);
-    } else {
-        println!("error: {}", program.unwrap_err());
-    }
-    //println!("{:?}", parser.current);
-    //println!("{:?}", parser.tokens.len());
-    //// println!("{:?}", parser.tokens);
-    //println!("stopped on token: {:?}", parser.tokens[parser.current]);
+    let program = parser.parse().unwrap_or_else(|err| {
+        eprintln!("error: {}", err);
+        process::exit(1);
+    });
+
+    let mut interp = Interp::new();
+    interp.eval(program);
+    println!("{:?}", interp.env);
 }
