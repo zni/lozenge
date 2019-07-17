@@ -305,7 +305,19 @@ impl Parser {
             return Ok(Expr::Literal(self.previous().literal.unwrap()));
         }
 
-        // TODO Handle parens
+        if self.match_token(vec![Type::LeftParen]) {
+            let expr = self.expression();
+            let paren = self.expect(Type::RightParen, "expected matching ')'");
+            if paren.is_err() {
+                return Err(paren.unwrap_err());
+            }
+
+            if expr.is_err() {
+                return Err(expr.unwrap_err());
+            }
+
+            return Ok(Expr::Group(Box::new(expr.unwrap())));
+        }
 
         return Err("expected expression");
     }

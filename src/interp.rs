@@ -179,7 +179,8 @@ impl Interp {
                 } else {
                     return 0;
                 }
-            }
+            },
+            Expr::Group(expr) => self.eval_expr(*expr),
         }
     }
 

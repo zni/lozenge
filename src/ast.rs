@@ -66,6 +66,7 @@ pub enum Expr {
     OddExpr(Box<Expr>),
     PrefixExpr(Option<Type>, Box<Expr>),
     Var(String),
+    Group(Box<Expr>),
 }
 
 #[derive(Clone, Debug)]
