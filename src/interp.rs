@@ -1,8 +1,15 @@
 use std::collections::HashMap;
+use std::process;
 use crate::ast::{Block, Expr, Literal, Type};
 
+#[derive(Clone, Debug)]
+pub enum EnvVal {
+    Number(i32),
+    ProcVal(Block),
+}
+
 pub struct Interp {
-    pub env: HashMap<String, i32>
+    pub env: HashMap<String, EnvVal>
 }
 
 impl Interp {
@@ -18,11 +25,11 @@ impl Interp {
             Block::Block(consts, vars, procs, stmts) => {
                 self.extend_env_consts(*consts);
                 self.extend_env_vars(*vars);
+                self.extend_env_procs(procs);
                 self.eval(*stmts);
             },
             Block::Begin(stmts) => {
                 for stmt in stmts {
-                    println!("{:?}", stmt);
                     self.eval(*stmt);
                 }
             },
@@ -35,11 +42,37 @@ impl Interp {
             Block::Assign(var, expr) => {
                 let val = self.eval_expr(expr);
                 if let Expr::Var(s) = var {
-                    self.env.insert(s, val);
+                    self.env.insert(s, EnvVal::Number(val));
                 }
             },
             Block::WriteLn(expr) => {
                 println!("{}", self.eval_expr(expr));
+            },
+            Block::While(expr, stmt) => {
+                loop {
+                    let val = self.eval_expr(expr.clone());
+                    if val < 1 {
+                        break;
+                    }
+
+                    self.eval(*stmt.clone());
+                }
+            },
+            Block::Call(expr) => {
+                if let Expr::Var(v) = expr {
+                    let procval = self.env.get(&v);
+                    if procval.is_none() {
+                        eprintln!("function {} not defined", v);
+                        process::exit(1);
+                    }
+                    let procval = procval.unwrap();
+                    if let EnvVal::ProcVal(p) = &procval {
+                        self.eval(p.to_owned());
+                    } else {
+                        eprintln!("{} is not a function", v);
+                        process::exit(1);
+                    }
+                }
             },
             _ => (),
         }
@@ -48,15 +81,21 @@ impl Interp {
     fn eval_expr(&mut self, expr: Expr) -> i32 {
         match expr {
             Expr::Literal(l) => {
-                if let Literal::Number(n) = l {
-                    return n
-                } else {
-                    return 0
-                }
+                let Literal::Number(n) = l;
+                return n;
             },
             Expr::Var(v) => {
-                // TODO Check if variable exists.
-                return *self.env.get(&v).unwrap();
+                let val = self.env.get(&v);
+                if val.is_none() {
+                    eprintln!("variable {} not declared", v);
+                    process::exit(1);
+                }
+
+                if let EnvVal::Number(n) = val.unwrap() {
+                    return *n;
+                } else {
+                    return 0;
+                }
             },
             Expr::PrefixExpr(prefix, expr) => {
                 if prefix.is_some() {
@@ -76,6 +115,60 @@ impl Interp {
                     Type::Minus => self.eval_expr(*left) - self.eval_expr(*right),
                     Type::Star => self.eval_expr(*left) * self.eval_expr(*right),
                     Type::Slash => self.eval_expr(*left) / self.eval_expr(*right),
+                    Type::Greater => {
+                        let left = self.eval_expr(*left);
+                        let right = self.eval_expr(*right);
+                        if left > right {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    },
+                    Type::GreaterEqual => {
+                        let left = self.eval_expr(*left);
+                        let right = self.eval_expr(*right);
+                        if left >= right {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    },
+                    Type::Less => {
+                        let left = self.eval_expr(*left);
+                        let right = self.eval_expr(*right);
+                        if left < right {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    },
+                    Type::LessEqual => {
+                        let left = self.eval_expr(*left);
+                        let right = self.eval_expr(*right);
+                        if left <= right {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    },
+                    Type::Equal => {
+                        let left = self.eval_expr(*left);
+                        let right = self.eval_expr(*right);
+                        if left == right {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    },
+                    Type::Hash => {
+                        let left = self.eval_expr(*left);
+                        let right = self.eval_expr(*right);
+                        if left != right {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    },
                     _ => 0
                 }
             },
@@ -87,7 +180,6 @@ impl Interp {
                     return 0;
                 }
             }
-            _ => 0,
         }
     }
 
@@ -96,9 +188,8 @@ impl Interp {
             for cd in cds {
                 if let Block::Const(Expr::Var(s),
                                     Expr::Literal(l)) = *cd {
-                    if let Literal::Number(n) = l {
-                        self.env.insert(s, n);
-                    }
+                    let Literal::Number(n) = l;
+                    self.env.insert(s, EnvVal::Number(n));
                 }
             }
         }
@@ -108,7 +199,18 @@ impl Interp {
         if let Block::VarDecs(vds) = block {
             for v in vds {
                 if let Expr::Var(s) = *v {
-                    self.env.insert(s, 0);
+                    self.env.insert(s, EnvVal::Number(0));
+                }
+            }
+        }
+    }
+
+    fn extend_env_procs(&mut self, block: Vec<Box<Block>>) {
+        for b in block {
+            if let Block::Procedure(name, body) = *b {
+                if let Expr::Var(v) = name {
+                    let procval = EnvVal::ProcVal(*body);
+                    self.env.insert(v, procval);
                 }
             }
         }

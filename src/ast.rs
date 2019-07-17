@@ -59,7 +59,7 @@ impl Token {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Expr {
     Expr(Box<Expr>, Type, Box<Expr>),
     Literal(Literal),
@@ -68,7 +68,7 @@ pub enum Expr {
     Var(String),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Block {
     Assign(Expr, Expr),
     Begin(Vec<Box<Block>>),
