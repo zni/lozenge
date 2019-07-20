@@ -1,6 +1,6 @@
 pub type Label = String;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum IR {
     JMP(Label),
     JMZ(Label),
@@ -23,9 +23,10 @@ pub enum IR {
     NOOP,
     StartFunc,
     RET,
+    HALT,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Line {
     pub label: Option<Label>,
     pub inst: IR

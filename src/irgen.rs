@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::ast::{Block, Expr, Literal, Type};
 use crate::ir::{IR, Label, Line};
 
-pub struct CodeGen {
+pub struct IRGen {
     pub symbol_table: HashMap<String, Label>,
     pub const_table: HashMap<String, i32>,
     pub code: Vec<Line>,
@@ -10,9 +10,9 @@ pub struct CodeGen {
     label: u32,
 }
 
-impl CodeGen {
-    pub fn new() -> CodeGen {
-        CodeGen {
+impl IRGen {
+    pub fn new() -> IRGen {
+        IRGen {
             symbol_table: HashMap::new(),
             const_table: HashMap::new(),
             code: Vec::new(),
@@ -35,7 +35,11 @@ impl CodeGen {
 
     pub fn gen(&mut self, program: Block) {
         match program {
-            Block::Program(p) => self.gen(*p),
+            Block::Program(p) => {
+                self.gen(*p);
+                self.code.push(Line::new(None, IR::HALT));
+                self.remove_noops();
+            },
             Block::Block(consts, vars, procs, stmts) => {
                 self.gen_consts(*consts);
                 self.gen_vars(*vars);
@@ -226,6 +230,25 @@ impl CodeGen {
                     self.code.push(Line::new(None, IR::RET));
                 }
             }
+        }
+    }
+
+    /*
+     * Remove NOOPS that exist just to hold labels by passing the label forward.
+     */
+    fn remove_noops(&mut self) {
+        let mut i = 0;
+        while i < self.code.len() {
+            let current = self.code[i].clone();
+            if let Line { inst: IR::NOOP, label: l } = current {
+                if (i + 1) < self.code.len() {
+                    let mut next = &mut self.code[i + 1];
+                    next.label = l.clone();
+                    self.code.remove(i);
+                }
+            }
+
+            i += 1;
         }
     }
 }

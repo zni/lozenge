@@ -7,7 +7,7 @@ use std::process;
 use lozenge::scanner::Scanner;
 use lozenge::parser::Parser;
 //use lozenge::interp::Interp;
-use lozenge::codegen::CodeGen;
+use lozenge::irgen::IRGen;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -47,9 +47,9 @@ fn run(source: Vec<char>) {
     interp.eval(program);
     println!("{:?}", interp.env);
 */
-    let mut codegen = CodeGen::new();
-    codegen.gen(program);
-    for c in codegen.code {
+    let mut irgen = IRGen::new();
+    irgen.gen(program);
+    for c in irgen.code {
         println!("{:?}", c);
     }
 }
