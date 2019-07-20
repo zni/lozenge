@@ -1,4 +1,4 @@
-use crate::ast::{Type, Token, Literal, Expr, Block};
+use crate::ast::{Type, Token, Expr, Block};
 
 #[derive(Debug)]
 pub struct Parser {

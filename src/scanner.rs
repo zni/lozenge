@@ -148,14 +148,6 @@ impl Scanner {
         self.source[self.current]
     }
 
-    fn peek_next(&self) -> char {
-        if (self.current + 1) >= self.source.len() {
-            return '\0';
-        }
-
-        return self.source[self.current + 1];
-    }
-
     fn is_digit(c: char) -> bool {
         c >= '0' && c <= '9'
     }
