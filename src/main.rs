@@ -8,6 +8,7 @@ use lozenge::scanner::Scanner;
 use lozenge::parser::Parser;
 //use lozenge::interp::Interp;
 use lozenge::irgen::IRGen;
+use lozenge::codegen::CodeGen;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -49,7 +50,15 @@ fn run(source: Vec<char>) {
 */
     let mut irgen = IRGen::new();
     irgen.gen(program);
-    for c in irgen.code {
-        println!("{:?}", c);
+    //for c in irgen.code.iter() {
+    //    println!("{:?}", c);
+    //}
+
+    let mut ir = irgen.code.clone();
+    let mut codegen = CodeGen::new();
+    codegen.gen(&mut ir);
+    for o in codegen.output {
+        println!("0x{:08X}", o);
     }
+
 }

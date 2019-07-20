@@ -24,6 +24,7 @@ pub enum IR {
     StartFunc,
     RET,
     HALT,
+    DEC(i32),
 }
 
 #[derive(Clone, Debug)]

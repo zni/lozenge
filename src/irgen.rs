@@ -213,7 +213,8 @@ impl IRGen {
             for v in vds {
                 if let Expr::Var(s) = *v {
                     let sym = self.make_symbol();
-                    self.symbol_table.insert(s, sym);
+                    self.symbol_table.insert(s, sym.clone());
+                    self.code.push(Line::new(Some(sym.clone()), IR::DEC(0)));
                 }
             }
         }
