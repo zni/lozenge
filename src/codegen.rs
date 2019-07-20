@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::convert::TryInto;
-use crate::ir::{IR, Label, Line};
+use crate::ir::{IR, Line};
 
 pub struct CodeGen {
     symbol_table: HashMap<String, u32>,
@@ -26,7 +26,7 @@ impl CodeGen {
         let mut i = 0;
         while i < input.len() {
             let line = input[i].clone();
-            if let Line { inst: IR::DEC(n), .. } = line {
+            if let Line { inst: IR::DEC(_), .. } = line {
                 reorder.push(line);
                 input.remove(i);
             } else {
