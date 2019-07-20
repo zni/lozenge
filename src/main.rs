@@ -6,7 +6,8 @@ use std::process;
 
 use lozenge::scanner::Scanner;
 use lozenge::parser::Parser;
-use lozenge::interp::Interp;
+//use lozenge::interp::Interp;
+use lozenge::codegen::CodeGen;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -41,7 +42,14 @@ fn run(source: Vec<char>) {
         process::exit(1);
     });
 
+/*
     let mut interp = Interp::new();
     interp.eval(program);
     println!("{:?}", interp.env);
+*/
+    let mut codegen = CodeGen::new();
+    codegen.gen(program);
+    for c in codegen.code {
+        println!("{:?}", c);
+    }
 }
