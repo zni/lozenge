@@ -5,7 +5,7 @@ pub struct VM {
     mar: u32,
     stack: Vec<i32>,
     return_stack: Vec<u32>,
-    memory: Vec<u32>,
+    memory: Vec<i32>,
     state: State,
 }
 
@@ -30,7 +30,7 @@ impl VM {
     pub fn load(&mut self, program: &Vec<u32>) {
         let mut i = 0;
         for n in program.iter() {
-            self.memory[i] = *n;
+            self.memory[i] = (*n) as i32;
             i += 1;
         }
     }
@@ -41,7 +41,7 @@ impl VM {
                 break;
             }
 
-            let cell = self.memory[self.pc as usize];
+            let cell: u32 = self.memory[self.pc as usize] as u32;
             self.pc += 1;
 
             let instruction = (cell & 0xFF000000) >> 24;
@@ -49,20 +49,20 @@ impl VM {
                 // JMP
                 0x10 => {
                     let address = cell & 0x00FFFFFF;
-                    self.pc = address;
+                    self.pc = address.try_into().unwrap();
                 },
                 // JMZ
                 0x20 => {
                     let address = cell & 0x00FFFFFF;
                     let val = self.stack.pop().unwrap();
                     if val == 0 {
-                        self.pc = address;
+                        self.pc = address.try_into().unwrap();
                     }
                 },
                 // LOAD
                 0x30 => {
                     let address = cell & 0x00FFFFFF;
-                    self.mar = address;
+                    self.mar = address.try_into().unwrap();
                     self.stack.push(self.memory[self.mar as usize] as i32);
                 },
                 // LOADC
@@ -73,15 +73,15 @@ impl VM {
                 // STORE
                 0x50 => {
                     let address = cell & 0x00FFFFFF;
-                    self.mar = address;
+                    self.mar = address.try_into().unwrap();
                     let value = self.stack.pop().unwrap();
-                    self.memory[self.mar as usize] = value.try_into().unwrap();
+                    self.memory[self.mar as usize] = value;
                 },
                 // CALL
                 0x60 => {
                     let address = cell & 0x00FFFFFF;
                     self.return_stack.push(self.pc);
-                    self.pc = address;
+                    self.pc = address.try_into().unwrap();
                 },
                 // WRITE
                 0x70 => {
@@ -98,7 +98,7 @@ impl VM {
                 0x90 => {
                     let a = self.stack.pop().unwrap();
                     let b = self.stack.pop().unwrap();
-                    self.stack.push(a - b);
+                    self.stack.push(b - a);
                 },
                 // DIV
                 0xA0 => {
