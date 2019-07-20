@@ -65,8 +65,8 @@ impl Interp {
                         eprintln!("function {} not defined", v);
                         process::exit(1);
                     }
-                    let procval = procval.unwrap();
-                    if let EnvVal::ProcVal(p) = &procval {
+                    let procval = procval.unwrap().clone();
+                    if let EnvVal::ProcVal(p) = procval {
                         self.eval(p.to_owned());
                     } else {
                         eprintln!("{} is not a function", v);
