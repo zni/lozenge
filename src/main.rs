@@ -6,7 +6,7 @@ use std::process;
 
 use lozenge::scanner::Scanner;
 use lozenge::parser::Parser;
-use lozenge::interp::Interp;
+//use lozenge::interp::Interp;
 use lozenge::irgen::IRGen;
 use lozenge::codegen::CodeGen;
 use lozenge::vm::VM;
@@ -21,7 +21,7 @@ fn main() {
     }
 }
 
-fn run_file(file: &String) {
+fn run_file(file: &str) {
     let path = Path::new(file);
     let mut file = File::open(&path)
         .expect("Failed to open file");
@@ -46,7 +46,6 @@ fn run(source: Vec<char>) {
 
     //let mut interp = Interp::new();
     //interp.eval(program);
-    //println!("{:?}", interp.env);
 
     let mut irgen = IRGen::new();
     irgen.gen(program);

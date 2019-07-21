@@ -122,10 +122,10 @@ impl Parser {
             return Err(statement.unwrap_err());
         }
 
-        return Ok(Block::Block(Box::new(const_decs),
-                               Box::new(var_decs),
-                               procedures,
-                               Box::new(statement.unwrap())));
+        Ok(Block::Block(Box::new(const_decs),
+                        Box::new(var_decs),
+                        procedures,
+                        Box::new(statement.unwrap())))
     }
 
     fn statement(&mut self) -> Result<Block, &'static str> {
@@ -225,16 +225,16 @@ impl Parser {
             return Ok(Block::WriteLn(expression.unwrap()));
         }
 
-        return Err("statement error");
+        Err("statement error")
     }
 
     fn condition(&mut self) -> Result<Expr, &'static str> {
         if self.match_token(vec![Type::Odd]) {
             let expr = self.expression();
             if expr.is_ok() {
-                return Ok(Expr::OddExpr(Box::new(expr.unwrap())));
+                Ok(Expr::OddExpr(Box::new(expr.unwrap())))
             } else {
-                return expr;
+                expr
             }
         } else {
             let expr = self.expression();
@@ -244,12 +244,12 @@ impl Parser {
                 let operator = self.previous();
                 let right = self.expression();
                 if expr.is_ok() && right.is_ok() {
-                    return Ok(Expr::Expr(Box::new(expr.unwrap()), operator.r#type, Box::new(right.unwrap())));
+                    Ok(Expr::Expr(Box::new(expr.unwrap()), operator.r#type, Box::new(right.unwrap())))
                 } else {
-                    return expr.and(right);
+                    expr.and(right)
                 }
             } else {
-                return Err("invalid condition");
+                Err("invalid condition")
             }
         }
     }
@@ -274,9 +274,9 @@ impl Parser {
         }
 
         if term.is_ok() {
-            return Ok(Expr::PrefixExpr(prefix, Box::new(term.unwrap())));
+            Ok(Expr::PrefixExpr(prefix, Box::new(term.unwrap())))
         } else {
-            return term;
+            term
         }
     }
 
@@ -319,7 +319,7 @@ impl Parser {
             return Ok(Expr::Group(Box::new(expr.unwrap())));
         }
 
-        return Err("expected expression");
+        Err("expected expression")
     }
 
     fn match_token(&mut self, tokens: Vec<Type>) -> bool {
@@ -330,7 +330,7 @@ impl Parser {
             }
         }
 
-        return false;
+        false
     }
 
     fn expect(&mut self,
@@ -356,7 +356,7 @@ impl Parser {
         if !self.is_at_end() {
             self.current += 1;
         }
-        return self.previous();
+        self.previous()
     }
 
     fn is_at_end(&self) -> bool {
@@ -369,6 +369,6 @@ impl Parser {
     }
 
     fn previous(&mut self) -> Token {
-        return self.tokens[self.current - 1].clone();
+        self.tokens[self.current - 1].clone()
     }
 }

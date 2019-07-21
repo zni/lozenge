@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ops::Neg;
 use std::process;
 use crate::ast::{Block, Expr, Literal, Type};
 
@@ -8,6 +9,7 @@ pub enum EnvVal {
     ProcVal(Block),
 }
 
+#[derive(Default)]
 pub struct Interp {
     pub env: HashMap<String, EnvVal>
 }
@@ -82,7 +84,7 @@ impl Interp {
         match expr {
             Expr::Literal(l) => {
                 let Literal::Number(n) = l;
-                return n;
+                n
             },
             Expr::Var(v) => {
                 let val = self.env.get(&v);
@@ -101,8 +103,8 @@ impl Interp {
                 if prefix.is_some() {
                     let prefix = prefix.unwrap();
                     match prefix {
-                        Type::Minus => -1 * self.eval_expr(*expr),
-                        Type::Plus => 1 * self.eval_expr(*expr),
+                        Type::Minus => self.eval_expr(*expr).neg(),
+                        Type::Plus => self.eval_expr(*expr),
                         _ => self.eval_expr(*expr),
                     }
                 } else {
@@ -119,54 +121,54 @@ impl Interp {
                         let left = self.eval_expr(*left);
                         let right = self.eval_expr(*right);
                         if left > right {
-                            return 1;
+                            1
                         } else {
-                            return 0;
+                            0
                         }
                     },
                     Type::GreaterEqual => {
                         let left = self.eval_expr(*left);
                         let right = self.eval_expr(*right);
                         if left >= right {
-                            return 1;
+                            1
                         } else {
-                            return 0;
+                            0
                         }
                     },
                     Type::Less => {
                         let left = self.eval_expr(*left);
                         let right = self.eval_expr(*right);
                         if left < right {
-                            return 1;
+                            1
                         } else {
-                            return 0;
+                            0
                         }
                     },
                     Type::LessEqual => {
                         let left = self.eval_expr(*left);
                         let right = self.eval_expr(*right);
                         if left <= right {
-                            return 1;
+                            1
                         } else {
-                            return 0;
+                            0
                         }
                     },
                     Type::Equal => {
                         let left = self.eval_expr(*left);
                         let right = self.eval_expr(*right);
                         if left == right {
-                            return 1;
+                            1
                         } else {
-                            return 0;
+                            0
                         }
                     },
                     Type::Hash => {
                         let left = self.eval_expr(*left);
                         let right = self.eval_expr(*right);
                         if left != right {
-                            return 1;
+                            1
                         } else {
-                            return 0;
+                            0
                         }
                     },
                     _ => 0
@@ -175,9 +177,9 @@ impl Interp {
             Expr::OddExpr(expr) => {
                 let val = self.eval_expr(*expr);
                 if val % 2 == 1 {
-                    return 1;
+                    1
                 } else {
-                    return 0;
+                    0
                 }
             },
             Expr::Group(expr) => self.eval_expr(*expr),

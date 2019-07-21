@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use crate::ast::{Block, Expr, Literal, Type};
 use crate::ir::{IR, Label, Line};
 
+#[derive(Default)]
 pub struct IRGen {
     pub symbol_table: HashMap<String, Label>,
     pub const_table: HashMap<String, i32>,

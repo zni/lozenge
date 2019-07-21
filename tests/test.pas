@@ -7,7 +7,7 @@ end;
 
 begin
    x := 1;
-   while x <= 10 do
+   while x <= 100 do
    begin
       call square;
       ! squ;
