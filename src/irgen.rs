@@ -49,7 +49,7 @@ impl IRGen {
             },
             Block::Begin(stmts) => {
                 for stmt in stmts {
-                    self.gen(*stmt);
+                    self.gen(stmt);
                 }
             },
             Block::If(expr, block) => {
@@ -201,7 +201,7 @@ impl IRGen {
         if let Block::ConstDecs(cds) = block {
             for cd in cds {
                 if let Block::Const(Expr::Var(s),
-                                    Expr::Literal(l)) = *cd {
+                                    Expr::Literal(l)) = cd {
                     let Literal::Number(n) = l;
                     self.const_table.insert(s, n);
                 }
@@ -212,7 +212,7 @@ impl IRGen {
     fn gen_vars(&mut self, block: Block) {
         if let Block::VarDecs(vds) = block {
             for v in vds {
-                if let Expr::Var(s) = *v {
+                if let Expr::Var(s) = v {
                     let sym = self.make_symbol();
                     self.symbol_table.insert(s, sym.clone());
                     self.code.push(Line::new(Some(sym.clone()), IR::DEC(0)));
@@ -221,9 +221,9 @@ impl IRGen {
         }
     }
 
-    fn gen_procs(&mut self, block: Vec<Box<Block>>) {
+    fn gen_procs(&mut self, block: Vec<Block>) {
         for b in block {
-            if let Block::Procedure(name, body) = *b {
+            if let Block::Procedure(name, body) = b {
                 if let Expr::Var(v) = name {
                     let sym = self.make_symbol();
                     self.symbol_table.insert(v, sym.clone());

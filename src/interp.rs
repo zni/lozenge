@@ -32,7 +32,7 @@ impl Interp {
             },
             Block::Begin(stmts) => {
                 for stmt in stmts {
-                    self.eval(*stmt);
+                    self.eval(stmt);
                 }
             },
             Block::If(expr, block) => {
@@ -190,7 +190,7 @@ impl Interp {
         if let Block::ConstDecs(cds) = block {
             for cd in cds {
                 if let Block::Const(Expr::Var(s),
-                                    Expr::Literal(l)) = *cd {
+                                    Expr::Literal(l)) = cd {
                     let Literal::Number(n) = l;
                     self.env.insert(s, EnvVal::Number(n));
                 }
@@ -201,16 +201,16 @@ impl Interp {
     fn extend_env_vars(&mut self, block: Block) {
         if let Block::VarDecs(vds) = block {
             for v in vds {
-                if let Expr::Var(s) = *v {
+                if let Expr::Var(s) = v {
                     self.env.insert(s, EnvVal::Number(0));
                 }
             }
         }
     }
 
-    fn extend_env_procs(&mut self, block: Vec<Box<Block>>) {
+    fn extend_env_procs(&mut self, block: Vec<Block>) {
         for b in block {
-            if let Block::Procedure(name, body) = *b {
+            if let Block::Procedure(name, body) = b {
                 if let Expr::Var(v) = name {
                     let procval = EnvVal::ProcVal(*body);
                     self.env.insert(v, procval);

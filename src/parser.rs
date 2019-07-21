@@ -51,7 +51,7 @@ impl Parser {
                 let number = Expr::Literal(number.unwrap().literal.unwrap());
 
                 let const_dec = Block::Const(ident, number);
-                const_decs.push(Box::new(const_dec));
+                const_decs.push(const_dec);
 
                 if !self.match_token(vec![Type::Comma]) {
                     break;
@@ -74,7 +74,7 @@ impl Parser {
                 }
                 let ident = Expr::Var(ident.unwrap().lexeme);
 
-                var_decs.push(Box::new(ident));
+                var_decs.push(ident);
 
                 if !self.match_token(vec![Type::Comma]) {
                     break;
@@ -114,7 +114,7 @@ impl Parser {
             }
 
             let procedure = Block::Procedure(ident, Box::new(block.unwrap()));
-            procedures.push(Box::new(procedure));
+            procedures.push(procedure);
         }
 
         let statement = self.statement();
@@ -164,7 +164,7 @@ impl Parser {
                     return statement;
                 }
 
-                statements.push(Box::new(statement.unwrap()));
+                statements.push(statement.unwrap());
                 if !self.match_token(vec![Type::Semicolon]) {
                     break;
                 }

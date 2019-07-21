@@ -72,15 +72,15 @@ pub enum Expr {
 #[derive(Clone, Debug)]
 pub enum Block {
     Assign(Expr, Expr),
-    Begin(Vec<Box<Block>>),
-    Block(Box<Block>, Box<Block>, Vec<Box<Block>>, Box<Block>),
+    Begin(Vec<Block>),
+    Block(Box<Block>, Box<Block>, Vec<Block>, Box<Block>),
     Call(Expr),
     Const(Expr, Expr),
-    ConstDecs(Vec<Box<Block>>),
+    ConstDecs(Vec<Block>),
     If(Expr, Box<Block>),
     Procedure(Expr, Box<Block>),
     Program(Box<Block>),
-    VarDecs(Vec<Box<Expr>>),
+    VarDecs(Vec<Expr>),
     While(Expr, Box<Block>),
     WriteLn(Expr),
 }
